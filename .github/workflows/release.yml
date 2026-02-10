@@ -1,0 +1,205 @@
+name: Release
+
+"on":
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  ci:
+    name: CI Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Install dependencies
+        run: poetry install --no-interaction
+
+      - name: Lint
+        run: poetry run ruff check backend/ sdk/python/
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build frontend
+        run: cd frontend && npm install && npm run build
+
+      - name: Build Docker images
+        run: |
+          docker build -t rudra-backend ./backend
+          docker build -t rudra-frontend ./frontend
+
+      - name: Test Python SDK
+        run: |
+          cd sdk/python && pip install -e .
+          python -c "from rudra_sdk import RudraClient; print('Python SDK OK')"
+
+      - name: Test JavaScript SDK
+        run: |
+          node --input-type=module -e "
+          import { RudraClient } from './sdk/javascript/src/index.js';
+          console.log('JS SDK OK');
+          "
+
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: ci
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Get the previous tag
+          PREV_TAG=$(git tag --sort=-creatordate | head -2 | tail -1)
+          if [ -z "$PREV_TAG" ] || [ "$PREV_TAG" = "${GITHUB_REF#refs/tags/}" ]; then
+            PREV_TAG=$(git rev-list --max-parents=0 HEAD)
+          fi
+
+          echo "## What's Changed" > changelog.md
+          echo "" >> changelog.md
+
+          # Group commits by type
+          declare -A sections
+          sections[feat]="🚀 Features"
+          sections[fix]="🐛 Bug Fixes"
+          sections[docs]="📚 Documentation"
+          sections[refactor]="♻️ Refactoring"
+          sections[test]="✅ Tests"
+          sections[chore]="🔧 Maintenance"
+          sections[perf]="⚡ Performance"
+          sections[ci]="👷 CI/CD"
+          sections[style]="💄 Style"
+
+          has_content=false
+
+          for type in feat fix docs refactor test chore perf ci style; do
+            commits=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --grep="^${type}:" --grep="^${type}(" 2>/dev/null | sed "s/^- ${type}[:(]/- /;s/):/:/")
+            if [ -n "$commits" ]; then
+              echo "### ${sections[$type]}" >> changelog.md
+              echo "" >> changelog.md
+              echo "$commits" >> changelog.md
+              echo "" >> changelog.md
+              has_content=true
+            fi
+          done
+
+          # Catch all other commits
+          other=$(git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" --invert-grep --grep="^feat" --grep="^fix" --grep="^docs" --grep="^refactor" --grep="^test" --grep="^chore" --grep="^perf" --grep="^ci" --grep="^style" 2>/dev/null | head -30)
+          if [ -n "$other" ]; then
+            echo "### 📝 Other Changes" >> changelog.md
+            echo "" >> changelog.md
+            echo "$other" >> changelog.md
+            echo "" >> changelog.md
+            has_content=true
+          fi
+
+          if [ "$has_content" = false ]; then
+            echo "Initial release 🎉" >> changelog.md
+            echo "" >> changelog.md
+          fi
+
+          # Add stats
+          echo "---" >> changelog.md
+          echo "" >> changelog.md
+          COMMITS=$(git rev-list ${PREV_TAG}..HEAD --count 2>/dev/null || echo "?")
+          FILES=$(git diff ${PREV_TAG}..HEAD --stat 2>/dev/null | tail -1 || echo "")
+          AUTHORS=$(git log ${PREV_TAG}..HEAD --format="%aN" 2>/dev/null | sort -u | tr '\n' ', ' | sed 's/,$//')
+          echo "**${COMMITS} commits** by ${AUTHORS}" >> changelog.md
+          if [ -n "$FILES" ]; then
+            echo "" >> changelog.md
+            echo "\`${FILES}\`" >> changelog.md
+          fi
+
+          cat changelog.md
+
+      - name: Build Python SDK dist
+        run: |
+          cd sdk/python
+          pip install build
+          python -m build
+          ls dist/
+
+      - name: Create release archive
+        run: |
+          mkdir -p release
+          # Full project zip (exclude dev artifacts)
+          zip -r release/rudra-${{ steps.version.outputs.VERSION }}.zip . \
+            -x ".git/*" \
+            -x "frontend/node_modules/*" \
+            -x "frontend/build/*" \
+            -x "frontend/package-lock.json" \
+            -x "__pycache__/*" \
+            -x "*.pyc" \
+            -x ".venv/*" \
+            -x "release/*" \
+            -x "sdk/python/dist/*" \
+            -x "sdk/python/build/*" \
+            -x "*.egg-info/*" \
+            -x "changelog.md"
+
+          # Copy SDK artifacts
+          cp sdk/python/dist/*.tar.gz release/ 2>/dev/null || true
+          cp sdk/python/dist/*.whl release/ 2>/dev/null || true
+
+          ls -lh release/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: "Rudra v${{ steps.version.outputs.VERSION }}"
+          body_path: changelog.md
+          draft: false
+          prerelease: ${{ contains(github.ref, 'alpha') || contains(github.ref, 'beta') || contains(github.ref, 'rc') }}
+          generate_release_notes: true
+          append_body: true
+          files: |
+            release/rudra-${{ steps.version.outputs.VERSION }}.zip
+            release/*.tar.gz
+            release/*.whl
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-pypi:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Build SDK package
+        run: |
+          cd sdk/python
+          pip install build
+          python -m build
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          packages-dir: sdk/python/dist/

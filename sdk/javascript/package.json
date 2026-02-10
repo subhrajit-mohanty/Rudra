@@ -1,0 +1,16 @@
+{
+  "name": "@rudra/sdk",
+  "version": "1.0.0",
+  "description": "JavaScript SDK for Rudra Auth Platform",
+  "main": "src/index.js",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "keywords": ["auth", "keycloak", "sso", "oidc", "saml", "sdk", "rudra"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rudra-auth/rudra"
+  }
+}
