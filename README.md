@@ -1,17 +1,11 @@
 <div align="center">
 
-<img src="assets/logo.png" alt="Rudra" width="180" />
-
-# Rudra
-
-**Open-source managed authentication platform powered by Keycloak**
+<img src="assets/banner.svg" alt="Rudra — Open-source managed authentication platform" width="800" />
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED.svg)](docker-compose.yml)
 [![Python SDK](https://img.shields.io/badge/SDK-Python-3776AB.svg)](sdk/python/)
 [![JS SDK](https://img.shields.io/badge/SDK-JavaScript-F7DF1E.svg)](sdk/javascript/)
-
-Clerk-level features — user management, SSO, organizations, webhooks, RBAC, analytics, and coupons — running on your own infrastructure.
 
 [Quick Start](#quick-start) · [Documentation](https://rudra-auth.github.io/rudra/) · [SDK](#sdk) · [Contributing](CONTRIBUTING.md)
 
