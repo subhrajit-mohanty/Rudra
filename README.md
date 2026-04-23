@@ -42,6 +42,8 @@ in `.env` is missing, so fill the file in before starting the stack.
 | Dashboard after first sign in | Pick a plan for a new project |
 | ![Project form](assets/screenshots/05-project-form.png) | ![Project detail](assets/screenshots/06-project-detail.png) |
 | Name a project and attach a coupon | Project overview with live counts |
+| ![First project on dashboard](assets/screenshots/07-dashboard-populated.png) | |
+| Global dashboard the moment the first project lands | |
 
 ### Inside a project
 

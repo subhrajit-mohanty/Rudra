@@ -1,4 +1,4 @@
-# Claude Code local config (skills, settings, memory)
+# Per developer local tooling and editor assistant config (not shared)
 .claude/
 
 # Secrets and local environment overrides
