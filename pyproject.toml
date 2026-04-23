@@ -54,3 +54,7 @@ ignore = ["E701", "E702"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+pythonpath = ["backend", "sdk/python"]
+markers = [
+    "integration: tests that require a running MongoDB service.",
+]

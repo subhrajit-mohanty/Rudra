@@ -78,6 +78,70 @@ jobs:
         working-directory: frontend
         run: npm run build
 
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend and test dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pytest pytest-asyncio
+
+      - name: Run unit tests
+        env:
+          KEYCLOAK_ADMIN_USER: test-admin
+          KEYCLOAK_ADMIN_PASSWORD: test-admin-password
+          MONGODB_URL: mongodb://localhost:27017
+          MONGODB_DB: rudra_test
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: unit-test-only-secret
+        run: pytest tests/unit/ -v
+
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand(\"ping\")' || exit 1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install backend and test dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r backend/requirements.txt
+          pip install pytest pytest-asyncio
+
+      - name: Run integration tests
+        env:
+          KEYCLOAK_ADMIN_USER: test-admin
+          KEYCLOAK_ADMIN_PASSWORD: test-admin-password
+          MONGODB_URL: mongodb://localhost:27017
+          MONGODB_DB: rudra_test
+          REDIS_URL: redis://localhost:6379/0
+          SECRET_KEY: integration-test-only-secret
+        run: pytest tests/integration/ -v
+
   security:
     name: Dependency Security Audit
     runs-on: ubuntu-latest
@@ -115,7 +179,7 @@ jobs:
   docker:
     name: Build Docker Images
     runs-on: ubuntu-latest
-    needs: [lint, frontend]
+    needs: [lint, frontend, unit-tests, integration-tests]
     steps:
       - uses: actions/checkout@v4
 

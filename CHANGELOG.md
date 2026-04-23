@@ -34,7 +34,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `HEALTHCHECK` directives in both backend and frontend Dockerfiles plus
   a compose level healthcheck for the frontend container.
 - `frontend/package-lock.json` so `npm ci` produces reproducible builds.
-- This `CHANGELOG.md`.
+- First pytest suite under `tests/`, split into `tests/unit/` (pure
+  function coverage for password hashing, JWT handling, the `_required`
+  env helper and Pydantic request models) and `tests/integration/`
+  (FastAPI TestClient against real MongoDB with Keycloak mocked,
+  covering the health surface, the register and login flow, and tenant
+  isolation regression tests that prove a second admin cannot access
+  another admin's realm).
+- CI jobs `Unit Tests` and `Integration Tests` (the latter with a
+  `mongo:7` GitHub Actions service container) that must pass before a
+  PR into `main` can be merged, plus a `Dependency Security Audit` job
+  that runs `pip-audit` and `npm audit`.
+- Top level `permissions: contents: read` and a `concurrency:` group
+  on the CI workflow so the default `GITHUB_TOKEN` is read only and
+  rapid pushes cancel in flight runs.
+- `CHANGELOG.md`.
 
 ### Changed
 
