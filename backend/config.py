@@ -1,13 +1,32 @@
 import os
+import sys
+
+
+def _required(name: str) -> str:
+    """Return the value of a required env var or exit with a clear error.
+
+    Using this for secret material prevents the backend from silently
+    booting with an insecure default (for example a well known SECRET_KEY
+    that would let anyone forge JWTs).
+    """
+    value = os.getenv(name)
+    if not value:
+        sys.stderr.write(
+            f"FATAL: environment variable {name} is required and was not set.\n"
+            f"See .env.example for the full list of variables.\n"
+        )
+        raise SystemExit(1)
+    return value
+
 
 KEYCLOAK_URL = os.getenv("KEYCLOAK_URL", "http://localhost:8080")
 KEYCLOAK_EXTERNAL_URL = os.getenv("KEYCLOAK_EXTERNAL_URL", "http://localhost:8080")
-KEYCLOAK_ADMIN_USER = os.getenv("KEYCLOAK_ADMIN_USER", "admin")
-KEYCLOAK_ADMIN_PASSWORD = os.getenv("KEYCLOAK_ADMIN_PASSWORD", "admin")
-MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://admin:admin_password@localhost:27017")
+KEYCLOAK_ADMIN_USER = _required("KEYCLOAK_ADMIN_USER")
+KEYCLOAK_ADMIN_PASSWORD = _required("KEYCLOAK_ADMIN_PASSWORD")
+MONGODB_URL = _required("MONGODB_URL")
 MONGODB_DB = os.getenv("MONGODB_DB", "rudra")
-REDIS_URL = os.getenv("REDIS_URL", "redis://:redis_password@localhost:6379/0")
-SECRET_KEY = os.getenv("SECRET_KEY", "super-secret-key")
+REDIS_URL = _required("REDIS_URL")
+SECRET_KEY = _required("SECRET_KEY")
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
 
 DISPOSABLE_EMAIL_DOMAINS = [
