@@ -138,6 +138,7 @@ tr:hover td { background: rgba(26,154,175,0.04); }
       <a class="nav-link active" href="#overview">Overview</a>
       <a class="nav-link" href="#quickstart">Quick Start</a>
       <a class="nav-link" href="#architecture">Architecture</a>
+      <a class="nav-link" href="#screenshots">Screenshots</a>
     </div>
     <div class="nav-group">
       <div class="nav-group-label">Walkthrough</div>
@@ -248,6 +249,32 @@ docker compose up --build</code></pre>
 </section>
 
 <!-- WALKTHROUGH: REGISTER -->
+<section id="screenshots">
+<h2>Screenshots</h2>
+<p>The dashboard is a React plus Vite SPA served by nginx. Every shot below was captured against a clean <code>docker compose up</code> on the <code>dev</code> branch.</p>
+
+<h3>Sign in</h3>
+<p><img src="../assets/screenshots/01-login.png" alt="Rudra sign in page" style="max-width:100%; border:1px solid var(--border); border-radius:var(--radius);"></p>
+
+<h3>Register</h3>
+<p><img src="../assets/screenshots/02-register.png" alt="Register a new admin" style="max-width:100%; border:1px solid var(--border); border-radius:var(--radius);"></p>
+
+<h3>Empty dashboard</h3>
+<p><img src="../assets/screenshots/03-dashboard-empty.png" alt="Dashboard before the first project is created" style="max-width:100%; border:1px solid var(--border); border-radius:var(--radius);"></p>
+
+<h3>Pick a plan</h3>
+<p><img src="../assets/screenshots/04-plans.png" alt="Plan picker showing Free, Pro, Business and Enterprise tiers" style="max-width:100%; border:1px solid var(--border); border-radius:var(--radius);"></p>
+
+<h3>Configure the project</h3>
+<p><img src="../assets/screenshots/05-project-form.png" alt="Project configuration with name, realm identifier, plan and coupon" style="max-width:100%; border:1px solid var(--border); border-radius:var(--radius);"></p>
+
+<h3>Project detail</h3>
+<p><img src="../assets/screenshots/06-project-detail.png" alt="Project overview with Users, Applications, SSO, Organizations, Roles, Webhooks and Settings tabs" style="max-width:100%; border:1px solid var(--border); border-radius:var(--radius);"></p>
+
+<h3>Populated dashboard</h3>
+<p><img src="../assets/screenshots/07-dashboard-populated.png" alt="Dashboard with one project, plan distribution and recent activity" style="max-width:100%; border:1px solid var(--border); border-radius:var(--radius);"></p>
+</section>
+
 <section id="register">
 <h2>1. Create Your Account</h2>
 <p>When you open the dashboard at <code>http://localhost:3000</code>, you'll see the login screen.</p>

@@ -30,6 +30,21 @@ in `.env` is missing, so fill the file in before starting the stack.
 | API Docs    | http://localhost:8000/docs| Bearer token from `/api/auth/login`           |
 | Keycloak    | http://localhost:8080     | `KEYCLOAK_ADMIN` / `KEYCLOAK_ADMIN_PASSWORD`  |
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Login](assets/screenshots/01-login.png) | ![Register](assets/screenshots/02-register.png) |
+| Sign in page | Create an admin account |
+| ![Empty dashboard](assets/screenshots/03-dashboard-empty.png) | ![Plan picker](assets/screenshots/04-plans.png) |
+| Dashboard after first sign in | Pick a plan for a new project |
+| ![Project form](assets/screenshots/05-project-form.png) | ![Project detail](assets/screenshots/06-project-detail.png) |
+| Name a project and attach a coupon | Per project overview with Users, SSO, Organizations, Roles, Webhooks and Settings tabs |
+| ![Populated dashboard](assets/screenshots/07-dashboard-populated.png) | |
+| Dashboard once a project is live | |
+
+See [docs/screenshots.md](docs/screenshots.md) for the full tour with captions.
+
 ## Features
 
 - **Email/Password, Social Login, Magic Links, MFA** — Full auth stack per project
