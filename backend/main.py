@@ -39,9 +39,21 @@ app.add_middleware(CORSMiddleware, allow_origins=CORS_ORIGINS, allow_credentials
 # ── Helpers ──
 def _plan(tenant): return PLANS.get(tenant.get("plan", "free"), PLANS["free"])
 
-async def _check_feature(realm, feature):
+async def _get_owned_tenant(realm, admin):
+    """Fetch a tenant and verify the caller owns it.
+
+    Every tenant scoped endpoint must go through this helper so an
+    authenticated admin cannot read or mutate another admin's tenant.
+    Returns 404 (not 403) on ownership mismatch to avoid leaking the
+    existence of other admins' realms.
+    """
     t = await db.get_tenant(realm)
-    if not t: raise HTTPException(404, "Tenant not found")
+    if not t or t["owner_email"] != admin["email"]:
+        raise HTTPException(404, "Tenant not found")
+    return t
+
+async def _check_feature(realm, feature, admin):
+    t = await _get_owned_tenant(realm, admin)
     pc = _plan(t)
     if not pc.get(feature): raise HTTPException(403, f"Feature '{feature}' requires plan upgrade")
     return t, pc
@@ -335,13 +347,14 @@ async def revoke_sessions(realm: str, uid: str, admin=Depends(get_current_admin)
 
 @app.delete("/api/tenants/{realm}/sessions/{sid}")
 async def revoke_session(realm: str, sid: str, admin=Depends(get_current_admin)):
+    await _get_owned_tenant(realm, admin)
     await kc.delete_session(realm, sid)
     return {"status": "session revoked"}
 
 # ═══ IMPERSONATION (Clerk Pro) ═══
 @app.post("/api/tenants/{realm}/users/{uid}/impersonate")
 async def impersonate(realm: str, uid: str, admin=Depends(get_current_admin)):
-    await _check_feature(realm, "user_impersonation")
+    await _check_feature(realm, "user_impersonation", admin)
     r = await kc.impersonate_user(realm, uid)
     await db.log_activity(admin["email"], "impersonate_user", f"Impersonated {uid}", realm)
     return r
@@ -374,6 +387,7 @@ async def delete_role(realm: str, role_name: str, admin=Depends(get_current_admi
 
 @app.post("/api/tenants/{realm}/users/{uid}/roles/{role_name}")
 async def assign_user_role(realm: str, uid: str, role_name: str, admin=Depends(get_current_admin)):
+    await _get_owned_tenant(realm, admin)
     role = await kc.get_role(realm, role_name)
     if not role: raise HTTPException(404, "Role not found")
     await kc.assign_role(realm, uid, role["id"], role["name"])
@@ -381,6 +395,7 @@ async def assign_user_role(realm: str, uid: str, role_name: str, admin=Depends(g
 
 @app.delete("/api/tenants/{realm}/users/{uid}/roles/{role_name}")
 async def remove_user_role(realm: str, uid: str, role_name: str, admin=Depends(get_current_admin)):
+    await _get_owned_tenant(realm, admin)
     role = await kc.get_role(realm, role_name)
     if not role: raise HTTPException(404, "Role not found")
     await kc.remove_role(realm, uid, role["id"], role["name"])
@@ -389,7 +404,7 @@ async def remove_user_role(realm: str, uid: str, role_name: str, admin=Depends(g
 # ═══ ORGANIZATIONS (Clerk B2B) ═══
 @app.post("/api/tenants/{realm}/organizations")
 async def create_org(realm: str, d: OrgCreateM, admin=Depends(get_current_admin)):
-    t, pc = await _check_feature(realm, "organizations")
+    t, pc = await _check_feature(realm, "organizations", admin)
     oc = await db.count_orgs(realm)
     if pc["max_orgs"] != -1 and oc >= pc["max_orgs"]:
         raise HTTPException(403, f"Org limit ({pc['max_orgs']}) reached")
@@ -424,23 +439,27 @@ async def get_org(realm: str, slug: str, admin=Depends(get_current_admin)):
 
 @app.post("/api/tenants/{realm}/organizations/{slug}/members")
 async def add_org_member(realm: str, slug: str, d: OrgMemberM, admin=Depends(get_current_admin)):
+    await _get_owned_tenant(realm, admin)
     await db.add_org_member(realm, slug, d.user_id, d.role)
     await _fire_webhooks(realm, "organizationMembership.created", {"org": slug, "user_id": d.user_id, "role": d.role})
     return {"status": "added"}
 
 @app.delete("/api/tenants/{realm}/organizations/{slug}/members/{uid}")
 async def remove_org_member(realm: str, slug: str, uid: str, admin=Depends(get_current_admin)):
+    await _get_owned_tenant(realm, admin)
     await db.remove_org_member(realm, slug, uid)
     return {"status": "removed"}
 
 @app.delete("/api/tenants/{realm}/organizations/{slug}")
 async def delete_org(realm: str, slug: str, admin=Depends(get_current_admin)):
+    await _get_owned_tenant(realm, admin)
     await db.delete_org(realm, slug)
     return {"status": "deleted"}
 
 # ═══ INVITATIONS (Clerk feature) ═══
 @app.post("/api/tenants/{realm}/invitations")
 async def create_invitation(realm: str, d: InvitationCreateM, admin=Depends(get_current_admin)):
+    await _get_owned_tenant(realm, admin)
     inv_id = await db.create_invitation(realm, d.email, d.org_slug, d.role, admin["email"])
     await db.log_activity(admin["email"], "create_invitation", f"Invited {d.email}", realm)
     await _fire_webhooks(realm, "invitation.created", {"email": d.email, "org_slug": d.org_slug})
@@ -448,6 +467,7 @@ async def create_invitation(realm: str, d: InvitationCreateM, admin=Depends(get_
 
 @app.get("/api/tenants/{realm}/invitations")
 async def list_invitations(realm: str, org_slug: str = None, admin=Depends(get_current_admin)):
+    await _get_owned_tenant(realm, admin)
     invs = await db.list_invitations(realm, org_slug)
     return [{"id": str(i["_id"]), "email": i["email"], "org_slug": i.get("org_slug"),
              "role": i["role"], "status": i["status"], "invited_by": i.get("invited_by",""),
@@ -471,7 +491,7 @@ async def create_oidc_idp(realm: str, d: IdpCreateM, admin=Depends(get_current_a
 
 @app.post("/api/tenants/{realm}/idp/saml")
 async def create_saml_idp(realm: str, d: SamlIdpCreateM, admin=Depends(get_current_admin)):
-    t, pc = await _check_feature(realm, "saml_connections")
+    t, pc = await _check_feature(realm, "saml_connections", admin)
     if pc["saml_connections"] == 0: raise HTTPException(403, "SAML requires Business plan")
     idps = await kc.list_idps(realm)
     saml_count = len([i for i in idps if i.get("providerId") == "saml"])
@@ -494,6 +514,7 @@ async def list_idps(realm: str, admin=Depends(get_current_admin)):
 
 @app.delete("/api/tenants/{realm}/idp/{alias}")
 async def delete_idp(realm: str, alias: str, admin=Depends(get_current_admin)):
+    await _get_owned_tenant(realm, admin)
     await kc.delete_idp(realm, alias)
     return {"status": "deleted"}
 
@@ -517,13 +538,14 @@ async def list_clients(realm: str, admin=Depends(get_current_admin)):
 
 @app.delete("/api/tenants/{realm}/clients/{cid}")
 async def delete_client(realm: str, cid: str, admin=Depends(get_current_admin)):
+    await _get_owned_tenant(realm, admin)
     await kc.delete_client(realm, cid)
     return {"status": "deleted"}
 
 # ═══ WEBHOOKS (Clerk webhooks system) ═══
 @app.post("/api/tenants/{realm}/webhooks")
 async def create_webhook(realm: str, d: WebhookCreateM, admin=Depends(get_current_admin)):
-    t, pc = await _check_feature(realm, "webhooks")
+    t, pc = await _check_feature(realm, "webhooks", admin)
     wc = len(await db.list_webhooks(realm))
     if pc["max_webhooks"] != -1 and wc >= pc["max_webhooks"]:
         raise HTTPException(403, f"Webhook limit ({pc['max_webhooks']}) reached")
@@ -542,12 +564,14 @@ async def list_webhooks(realm: str, admin=Depends(get_current_admin)):
 
 @app.get("/api/tenants/{realm}/webhooks/{wid}/logs")
 async def get_webhook_logs(realm: str, wid: str, admin=Depends(get_current_admin)):
+    await _get_owned_tenant(realm, admin)
     logs = await db.get_webhook_logs(wid)
     return [{"event": entry["event"], "status_code": entry["status_code"],
              "response_body": entry.get("response_body",""), "created_at": entry.get("created_at")} for entry in logs]
 
 @app.delete("/api/tenants/{realm}/webhooks/{wid}")
 async def delete_webhook(realm: str, wid: str, admin=Depends(get_current_admin)):
+    await _get_owned_tenant(realm, admin)
     await db.delete_webhook(wid)
     return {"status": "deleted"}
 
