@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Bump backend Python dependencies to patched versions flagged by
+  `pip-audit` (ten CVEs resolved across `pymongo`, `python-jose`,
+  `python-multipart` and `starlette`). `fastapi` goes from 0.109.2 to
+  0.129.0, which pulls `starlette>=0.47` and closes CVE-2024-47874 and
+  CVE-2025-54121. `python-jose` goes from 3.3.0 to 3.5.0, which allows
+  the newer `pyasn1` 0.6.x line that closes CVE-2026-30922.
 - Enforce tenant ownership on every realm scoped endpoint. Sixteen routes
   (session revocation, role assignment and removal, user impersonation,
   organization and invitation management, SAML and OIDC identity providers,
