@@ -16,14 +16,19 @@
 ## Quick Start
 
 ```bash
+cp .env.example .env
+# edit .env and replace every change_me_* placeholder with a real secret
 docker compose up --build
 ```
 
-| Service     | URL                       | Credentials       |
-|-------------|---------------------------|--------------------|
-| Dashboard   | http://localhost:3000      | Register new acct  |
-| API Docs    | http://localhost:8000/docs | Bearer token       |
-| Keycloak    | http://localhost:8080      | admin / admin      |
+The backend refuses to boot if `SECRET_KEY` or any other required variable
+in `.env` is missing, so fill the file in before starting the stack.
+
+| Service     | URL                       | Credentials                                   |
+|-------------|---------------------------|-----------------------------------------------|
+| Dashboard   | http://localhost:3000     | Register new account on the login page        |
+| API Docs    | http://localhost:8000/docs| Bearer token from `/api/auth/login`           |
+| Keycloak    | http://localhost:8080     | `KEYCLOAK_ADMIN` / `KEYCLOAK_ADMIN_PASSWORD`  |
 
 ## Features
 
