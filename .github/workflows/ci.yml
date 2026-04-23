@@ -164,13 +164,8 @@ jobs:
       - name: Audit backend requirements
         run: pip-audit --strict --requirement backend/requirements.txt
 
-      - name: Audit Python SDK installed environment
-        run: |
-          python -m venv /tmp/sdk-audit-env
-          /tmp/sdk-audit-env/bin/pip install --upgrade pip
-          /tmp/sdk-audit-env/bin/pip install -e sdk/python
-          /tmp/sdk-audit-env/bin/pip install pip-audit
-          /tmp/sdk-audit-env/bin/pip-audit --strict
+      - name: Audit Python SDK requirements
+        run: pip-audit --strict --requirement sdk/python/requirements.txt
 
       - name: Audit frontend npm dependencies
         working-directory: frontend
