@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI):
     yield
     await db.disconnect()
 
-app = FastAPI(title="Rudra API", description="Clerk-like Auth Platform powered by Keycloak", version="1.0.0", lifespan=lifespan)
+app = FastAPI(title="Rudra API", description="Clerk-like Auth Platform powered by Keycloak", version="1.1.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=CORS_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 # ── Helpers ──
@@ -674,4 +674,4 @@ async def delete_coupon(code: str, admin=Depends(get_current_admin)):
     return {"status": "deleted"}
 
 @app.get("/api/health")
-async def health(): return {"status": "ok", "version": "1.0.0"}
+async def health(): return {"status": "ok", "version": "1.1.0"}

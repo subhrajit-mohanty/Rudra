@@ -1,6 +1,6 @@
 {
   "name": "@rudra/sdk",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "JavaScript SDK for Rudra Auth Platform",
   "main": "src/index.js",
   "type": "module",

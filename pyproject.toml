@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "rudra"
-version = "1.0.1"
+version = "1.1.0"
 description = "Open-source managed authentication platform powered by Keycloak"
 authors = ["Rudra Contributors"]
 license = "MIT"

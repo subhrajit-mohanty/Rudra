@@ -66,8 +66,16 @@ class TestJwt:
         assert exc.value.status_code == 401
 
     def test_tampered_signature_raises_401(self):
+        # Replace the signature segment entirely with one produced under a
+        # different secret. Mutating a single character at the end of the
+        # signature is non deterministic because base64url padding can make
+        # adjacent encodings decode to the same byte sequence.
         token = create_access_token({"sub": "alice"})
-        tampered = token[:-1] + ("A" if token[-1] != "A" else "B")
+        header, payload, _ = token.split(".")
+        bad_sig = jwt.encode(
+            {"sub": "alice"}, "a different secret entirely", algorithm=ALGORITHM
+        ).split(".")[2]
+        tampered = f"{header}.{payload}.{bad_sig}"
         with pytest.raises(HTTPException) as exc:
             decode_token(tampered)
         assert exc.value.status_code == 401
