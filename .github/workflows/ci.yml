@@ -10,6 +10,17 @@ name: CI
       - main
       - master
 
+# Restrict the default GITHUB_TOKEN to read only. Jobs that need more
+# (for example to upload release artifacts) opt in explicitly.
+permissions:
+  contents: read
+
+# Cancel in-progress runs for the same ref so rapid pushes do not queue
+# up redundant pipelines.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   lint:
     name: Lint & Validate
@@ -61,11 +72,45 @@ jobs:
 
       - name: Install dependencies
         working-directory: frontend
-        run: npm install
+        run: npm ci --no-audit --no-fund
 
       - name: Build
         working-directory: frontend
         run: npm run build
+
+  security:
+    name: Dependency Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Audit backend requirements
+        run: pip-audit --strict --requirement backend/requirements.txt
+
+      - name: Audit Python SDK installed environment
+        run: |
+          python -m venv /tmp/sdk-audit-env
+          /tmp/sdk-audit-env/bin/pip install --upgrade pip
+          /tmp/sdk-audit-env/bin/pip install -e sdk/python
+          /tmp/sdk-audit-env/bin/pip install pip-audit
+          /tmp/sdk-audit-env/bin/pip-audit --strict
+
+      - name: Audit frontend npm dependencies
+        working-directory: frontend
+        run: npm audit --audit-level=high
 
   docker:
     name: Build Docker Images
@@ -81,7 +126,7 @@ jobs:
         run: docker build -t rudra-frontend ./frontend
 
   sdk-python:
-    name: Test Python SDK
+    name: Validate Python SDK imports
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -114,7 +159,7 @@ jobs:
           "
 
   sdk-javascript:
-    name: Test JavaScript SDK
+    name: Validate JavaScript SDK imports
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

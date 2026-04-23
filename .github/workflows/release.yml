@@ -35,7 +35,7 @@ jobs:
           node-version: "20"
 
       - name: Build frontend
-        run: cd frontend && npm install && npm run build
+        run: cd frontend && npm ci --no-audit --no-fund && npm run build
 
       - name: Build Docker images
         run: |
@@ -146,9 +146,10 @@ jobs:
           # Full project zip (exclude dev artifacts)
           zip -r release/rudra-${{ steps.version.outputs.VERSION }}.zip . \
             -x ".git/*" \
+            -x ".github/*" \
+            -x ".claude/*" \
             -x "frontend/node_modules/*" \
             -x "frontend/build/*" \
-            -x "frontend/package-lock.json" \
             -x "__pycache__/*" \
             -x "*.pyc" \
             -x ".venv/*" \
