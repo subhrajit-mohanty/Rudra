@@ -69,6 +69,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   credentials table references the real environment variable names
   rather than the removed `admin / admin` defaults.
 
+### Removed
+
+- Dropped the obsolete top level `version: '3.9'` key from
+  `docker-compose.yml`. Docker Compose V2 ignores it and prints a
+  deprecation warning on every invocation when it is present.
+
 ## [1.0.1] - 2026-02-10
 
 ### Changed
