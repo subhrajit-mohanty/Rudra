@@ -34,10 +34,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `HEALTHCHECK` directives in both backend and frontend Dockerfiles plus
   a compose level healthcheck for the frontend container.
 - `frontend/package-lock.json` so `npm ci` produces reproducible builds.
-- Seven dashboard screenshots under `assets/screenshots/` covering sign
-  in, register, empty and populated dashboards, plan picker, project
-  configuration and project detail. Linked from the README and a new
-  `docs/screenshots.md` tour page, plus a new Screenshots section in
+- Seventeen dashboard screenshots under `assets/screenshots/` covering
+  sign in, register, empty and populated dashboards, plan picker,
+  project configuration and detail, every project tab (Users,
+  Applications, SSO, Organizations, Roles, Webhooks, Settings), the
+  Coupons list, the create coupon modal, and the global dashboard
+  after a Pro project has been fully seeded. Linked from the README, a
+  new `docs/screenshots.md` tour page and a new Screenshots section in
   `docs/docs.html`.
 - First pytest suite under `tests/`, split into `tests/unit/` (pure
   function coverage for password hashing, JWT handling, the `_required`

@@ -32,6 +32,8 @@ in `.env` is missing, so fill the file in before starting the stack.
 
 ## Screenshots
 
+### Onboarding
+
 | | |
 |---|---|
 | ![Login](assets/screenshots/01-login.png) | ![Register](assets/screenshots/02-register.png) |
@@ -39,9 +41,27 @@ in `.env` is missing, so fill the file in before starting the stack.
 | ![Empty dashboard](assets/screenshots/03-dashboard-empty.png) | ![Plan picker](assets/screenshots/04-plans.png) |
 | Dashboard after first sign in | Pick a plan for a new project |
 | ![Project form](assets/screenshots/05-project-form.png) | ![Project detail](assets/screenshots/06-project-detail.png) |
-| Name a project and attach a coupon | Per project overview with Users, SSO, Organizations, Roles, Webhooks and Settings tabs |
-| ![Populated dashboard](assets/screenshots/07-dashboard-populated.png) | |
-| Dashboard once a project is live | |
+| Name a project and attach a coupon | Project overview with live counts |
+
+### Inside a project
+
+| | |
+|---|---|
+| ![Users tab](assets/screenshots/08-project-users.png) | ![Applications tab](assets/screenshots/09-project-applications.png) |
+| Manage end users across the realm | Register OIDC and SAML applications |
+| ![SSO tab](assets/screenshots/10-project-sso.png) | ![Organizations tab](assets/screenshots/11-project-organizations.png) |
+| Add OIDC or SAML identity providers | B2B organizations with domain auto join |
+| ![Roles tab](assets/screenshots/12-project-roles.png) | ![Webhooks tab](assets/screenshots/13-project-webhooks.png) |
+| RBAC roles mapped into JWT tokens | Event delivery endpoints with subscriptions |
+| ![Settings tab](assets/screenshots/14-project-settings.png) | ![Dashboard populated](assets/screenshots/17-dashboard-pro-project.png) |
+| Auth stack toggles and branding | Global dashboard once a Pro project is seeded |
+
+### Coupons
+
+| | |
+|---|---|
+| ![Coupons list](assets/screenshots/15-coupons-list.png) | ![Create coupon modal](assets/screenshots/16-coupon-create-modal.png) |
+| Active coupons with redemption counts | Create a new coupon with plan scope and expiry |
 
 See [docs/screenshots.md](docs/screenshots.md) for the full tour with captions.
 
