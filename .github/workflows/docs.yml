@@ -7,6 +7,8 @@ name: Deploy Docs
       - master
     paths:
       - "docs/**"
+      - "assets/**"
+      - ".github/workflows/docs.yml"
   workflow_dispatch:
 
 permissions:
@@ -32,6 +34,12 @@ jobs:
         run: |
           mkdir -p _site
           cp docs/docs.html _site/index.html
+          # docs.html references assets with root relative paths like
+          # `assets/screenshots/X.png`, so mirror the repo's assets
+          # folder into the Pages site root.
+          if [ -d assets ]; then
+            cp -r assets _site/assets
+          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
