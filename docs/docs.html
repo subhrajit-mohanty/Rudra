@@ -578,8 +578,13 @@ Total:                          $69/mo
   <tr><td>Bot Protection</td><td>Rate limiting &amp; CAPTCHA</td><td><span class="badge-plan badge-pro">Pro+</span></td></tr>
 </table>
 
+<div class="callout callout-warn">
+  <strong>⚠️ Not enforced yet</strong>
+  Only <em>Block Disposable Emails</em> takes effect today, and only for users created through the Rudra API. The other toggles are saved but not applied yet: MFA enforcement (<a href="https://github.com/subhrajit-mohanty/Rudra/issues/6">FND-5</a>), password breach detection (<a href="https://github.com/subhrajit-mohanty/Rudra/issues/7">FND-6</a>) and bot protection (<a href="https://github.com/subhrajit-mohanty/Rudra/issues/8">FND-7</a>) are on the roadmap, while magic links and the password and social login switches have no implementation yet.
+</div>
+
 <h3>Branding</h3>
-<p>Set a primary color (used in Keycloak login themes) and a logo URL per project.</p>
+<p>Set a primary color and a logo URL per project. Both are saved with the project; applying them to the Keycloak login theme is not implemented yet.</p>
 
 <h3>Plan Management</h3>
 <p>Upgrade or downgrade your project's plan directly from Settings. Changes take effect immediately.</p>
@@ -808,11 +813,11 @@ async def webhook(request: Request):
 <div class="feature-row"><div>Custom Roles</div><div class="check">2</div><div class="check">20</div><div class="check">∞</div><div class="check">∞</div></div>
 <div class="feature-row"><div>Analytics</div><div class="check check-no">—</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div></div>
 <div class="feature-row"><div>User Impersonation</div><div class="check check-no">—</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div></div>
-<div class="feature-row"><div>Breach Detection</div><div class="check check-no">—</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div></div>
-<div class="feature-row"><div>Bot Protection</div><div class="check check-no">—</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div></div>
+<div class="feature-row"><div>Breach Detection (planned)</div><div class="check check-no">—</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div></div>
+<div class="feature-row"><div>Bot Protection (planned)</div><div class="check check-no">—</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div></div>
 <div class="feature-row"><div>Block Disposable Emails</div><div class="check check-no">—</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div></div>
-<div class="feature-row"><div>Magic Links</div><div class="check check-no">—</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div></div>
-<div class="feature-row"><div>API Rate Limit</div><div class="check">100/m</div><div class="check">1K/m</div><div class="check">5K/m</div><div class="check">∞</div></div>
+<div class="feature-row"><div>Magic Links (planned)</div><div class="check check-no">—</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div></div>
+<div class="feature-row"><div>API Rate Limit (planned)</div><div class="check">100/m</div><div class="check">1K/m</div><div class="check">5K/m</div><div class="check">∞</div></div>
 <div class="feature-row"><div>Coupons</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div><div class="check check-yes">✓</div></div>
 </section>
 

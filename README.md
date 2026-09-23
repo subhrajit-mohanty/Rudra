@@ -69,16 +69,34 @@ See [docs/screenshots.md](docs/screenshots.md) for the full tour with captions.
 
 ## Features
 
-- **Email/Password, Social Login, Magic Links, MFA** — Full auth stack per project
-- **Enterprise SSO** — OIDC + SAML identity providers
-- **B2B Organizations** — Multi-tenant orgs with roles, invitations, domain auto-join
-- **RBAC** — Custom roles assigned to users, reflected in JWT tokens
-- **Webhooks** — Real-time events (user.created, org.created, etc.) with delivery logs
-- **Coupons** — Discount codes with plan restrictions, usage limits, expiry tracking
-- **Analytics** — User signup trends, login tracking, activity audit log
-- **Session Management** — View, revoke sessions, user impersonation
-- **Bot Protection, Breach Detection, Disposable Email Blocking** — Security features
-- **Multi-tier Plans** — Free / Pro / Business / Enterprise with feature gating
+### Available today
+
+- **Email/password sign in** — every project is its own Keycloak realm with self registration, password reset and brute force lockout
+- **Social login and enterprise SSO** — Google, GitHub, Facebook and custom OIDC identity providers, plus SAML identity providers on Business and above
+- **RBAC** — custom realm roles assigned to users and included in Keycloak issued tokens
+- **Session management** — view and revoke user sessions; user impersonation on Pro and above
+- **B2B organizations** — organizations with members and roles, plus invitation records. Members are stored by Rudra and not yet synced to Keycloak groups, and invitations are not emailed yet
+- **Webhooks** — `user.created`, `user.updated`, `user.deleted`, `organization.created`, `organizationMembership.created`, `session.revoked` and `invitation.created` events with delivery logs. Deliveries are sent inline, without retries yet
+- **Coupons** — discount codes with plan restrictions, usage limits and expiry
+- **Analytics** — login and failed login counts from Keycloak events, daily signups for users created through the API, and an activity log
+- **Disposable email blocking** — for users created through the Rudra API
+- **Multi-tier plans** — Free / Pro / Business / Enterprise with limits on projects, users, organizations, SAML connections, webhooks and impersonation
+
+### Planned
+
+The dashboard already shows these settings, but they are saved without being enforced yet:
+
+| Feature | Status today | Roadmap |
+|---|---|---|
+| Require MFA for all users | Toggle saved, not applied to Keycloak | [FND-5](https://github.com/subhrajit-mohanty/Rudra/issues/6) |
+| Password breach detection | Not implemented | [FND-6](https://github.com/subhrajit-mohanty/Rudra/issues/7) |
+| Bot protection | Not implemented | [FND-7](https://github.com/subhrajit-mohanty/Rudra/issues/8) |
+| Per plan API rate limits | Not enforced | [FND-3](https://github.com/subhrajit-mohanty/Rudra/issues/5) |
+| Magic links | Not implemented | — |
+| Password and social login on/off toggles | Saved, not applied to the realm | — |
+| Branding (logo, primary color) | Saved, not applied to the Keycloak login theme | — |
+
+Webhook retries and signed deliveries are tracked in [FND-4](https://github.com/subhrajit-mohanty/Rudra/issues/14) and [FND-8](https://github.com/subhrajit-mohanty/Rudra/issues/9). See [ROADMAP.md](ROADMAP.md) for everything else.
 
 ## Architecture
 
@@ -95,6 +113,8 @@ Rudra ships with official SDKs for Python and JavaScript.
 ### Python
 
 ```bash
+pip install rudra                   # published on PyPI, imported as rudra_sdk
+# or, from a checkout of this repository:
 cd sdk/python && pip install -e .
 ```
 
@@ -121,7 +141,8 @@ client.sso.add_oidc("my-app", alias="google", client_id="...", client_secret="..
 ### JavaScript
 
 ```bash
-npm install @rudra/sdk  # or import from sdk/javascript/
+# @rudra/sdk is not published to npm yet; install it from a checkout:
+npm install /path/to/rudra/sdk/javascript
 ```
 
 ```javascript
@@ -148,7 +169,7 @@ See full SDK docs: [Python](sdk/python/README.md) | [JavaScript](sdk/javascript/
 | Webhooks | — | 3 | 10 | Unlimited |
 | Analytics | — | ✓ | ✓ | ✓ |
 | Impersonation | — | ✓ | ✓ | ✓ |
-| Bot Protection | — | ✓ | ✓ | ✓ |
+| Bot Protection (planned) | — | ✓ | ✓ | ✓ |
 | Coupons | ✓ | ✓ | ✓ | ✓ |
 
 ## Project Structure
@@ -158,12 +179,15 @@ rudra/
 ├── backend/              # FastAPI (50+ endpoints)
 ├── frontend/             # React + Vite dashboard
 ├── sdk/
-│   ├── python/           # rudra Python package
-│   └── javascript/       # @rudra/sdk npm package
+│   ├── python/           # rudra Python package (imported as rudra_sdk)
+│   └── javascript/       # @rudra/sdk package
+├── tests/                # pytest unit and integration suites
+├── docs/                 # docs.html (published to GitHub Pages) and the screenshot tour
 ├── docker-compose.yml    # 6-service stack
-├── docs.html             # Full documentation (open in browser)
-├── LICENSE               # MIT
+├── ROADMAP.md            # Milestones and feature issues
+├── CHANGELOG.md          # Release history
 ├── CONTRIBUTING.md       # Contribution guide
+├── LICENSE               # MIT
 └── README.md
 ```
 

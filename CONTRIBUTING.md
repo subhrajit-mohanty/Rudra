@@ -13,7 +13,7 @@ Thank you for your interest in contributing to Rudra! This guide will help you g
 7. Test the full stack: `docker compose up --build`
 8. Commit: `git commit -m "feat: add my feature"`
 9. Push: `git push origin feature/my-feature`
-10. Open a Pull Request against `main`. CI will run lint, unit tests, integration tests, a dependency security audit and Docker image builds. All of these must pass before a PR can be merged.
+10. Open a Pull Request against `master`. CI will run lint, unit tests, integration tests, a dependency security audit and Docker image builds. All of these must pass before a PR can be merged.
 
 ## Development Setup
 
@@ -55,10 +55,18 @@ export KEYCLOAK_ADMIN_PASSWORD=test-admin-password
 export MONGODB_URL=mongodb://localhost:27017
 export MONGODB_DB=rudra_test
 export REDIS_URL=redis://localhost:6379/0
-export SECRET_KEY=local-test-secret
+export SECRET_KEY=local-test-secret-at-least-32-bytes
 
 pytest tests/ -v
+
+# Lint exactly what CI lints.
+pip install ruff==0.16.8
+ruff check backend/ sdk/python/ tests/
 ```
+
+Without a reachable MongoDB the integration tests are skipped locally. In CI
+(`CI=true`) they fail instead, so a broken database service can never
+produce a green run with zero tests executed.
 
 Pull requests must add tests alongside any non trivial change. New
 endpoints need at least one integration test; new pure helpers need at
@@ -88,7 +96,7 @@ rudra/
 │   └── integration/    # FastAPI TestClient + real MongoDB
 ├── docker-compose.yml
 ├── CHANGELOG.md        # user facing release history
-├── docs.html           # Full documentation
+├── docs/               # docs.html (GitHub Pages) and screenshot tour
 └── LICENSE             # MIT
 ```
 
