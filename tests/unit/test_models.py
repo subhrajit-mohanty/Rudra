@@ -4,9 +4,8 @@ Exercises the validation rules so API level invariants (like coupon
 percent bounds) cannot regress silently.
 """
 import pytest
-from pydantic import ValidationError
-
 from main import CouponCreateM, CouponValidateM, WebhookCreateM
+from pydantic import ValidationError
 
 
 class TestCouponCreate:

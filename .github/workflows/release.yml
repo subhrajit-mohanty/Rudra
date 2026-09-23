@@ -9,50 +9,12 @@ permissions:
   contents: write
 
 jobs:
+  # Run the same pipeline every PR must pass (lint, unit and integration
+  # tests, dependency audit, frontend and Docker builds, SDK checks)
+  # before anything is published.
   ci:
     name: CI Checks
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install Poetry
-        run: pip install poetry
-
-      - name: Install dependencies
-        run: poetry install --no-interaction
-
-      - name: Lint
-        run: poetry run ruff check backend/ sdk/python/
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Build frontend
-        run: cd frontend && npm ci --no-audit --no-fund && npm run build
-
-      - name: Build Docker images
-        run: |
-          docker build -t rudra-backend ./backend
-          docker build -t rudra-frontend ./frontend
-
-      - name: Test Python SDK
-        run: |
-          cd sdk/python && pip install -e .
-          python -c "from rudra_sdk import RudraClient; print('Python SDK OK')"
-
-      - name: Test JavaScript SDK
-        run: |
-          node --input-type=module -e "
-          import { RudraClient } from './sdk/javascript/src/index.js';
-          console.log('JS SDK OK');
-          "
+    uses: ./.github/workflows/ci.yml
 
   release:
     name: Create Release

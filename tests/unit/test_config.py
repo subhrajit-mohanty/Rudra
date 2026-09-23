@@ -1,6 +1,5 @@
 """Unit tests for backend/config.py helpers."""
 import pytest
-
 from config import _required
 
 

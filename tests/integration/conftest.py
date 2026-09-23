@@ -7,25 +7,44 @@ assert on Keycloak behaviour, only on our handlers and persistence.
 """
 from __future__ import annotations
 
+import os
 from unittest.mock import AsyncMock
 
 import pytest
 from fastapi.testclient import TestClient
 
 
-@pytest.fixture(autouse=True)
-def _clear_mongo():
-    """Drop the test database before and after each test to keep them isolated."""
-    from pymongo import MongoClient
+@pytest.fixture(scope="session")
+def _mongo_available():
+    """Check once per session that MongoDB answers a ping.
 
-    from config import MONGODB_DB, MONGODB_URL
+    Locally the suite skips when MongoDB is not running so `pytest tests/`
+    stays usable without services. In CI (`CI=true`, which GitHub Actions
+    sets) an unreachable database is an infrastructure failure, so the
+    suite fails instead of going green with every test skipped.
+    """
+    from config import MONGODB_URL
+    from pymongo import MongoClient
 
     mongo = MongoClient(MONGODB_URL, serverSelectionTimeoutMS=5000)
     try:
         mongo.admin.command("ping")
     except Exception as e:
-        pytest.skip(f"MongoDB not reachable at {MONGODB_URL}: {e}")
+        reason = f"MongoDB not reachable at {MONGODB_URL}: {e}"
+        if os.environ.get("CI", "").lower() in ("1", "true", "yes"):
+            pytest.fail(reason, pytrace=False)
+        pytest.skip(reason)
+    finally:
+        mongo.close()
 
+
+@pytest.fixture(autouse=True)
+def _clear_mongo(_mongo_available):
+    """Drop the test database before and after each test to keep them isolated."""
+    from config import MONGODB_DB, MONGODB_URL
+    from pymongo import MongoClient
+
+    mongo = MongoClient(MONGODB_URL, serverSelectionTimeoutMS=5000)
     mongo.drop_database(MONGODB_DB)
     try:
         yield

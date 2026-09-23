@@ -9,6 +9,8 @@ name: CI
     branches:
       - main
       - master
+  # Lets release.yml run this exact pipeline before publishing a tag.
+  workflow_call:
 
 # Restrict the default GITHUB_TOKEN to read only. Jobs that need more
 # (for example to upload release artifacts) opt in explicitly.
@@ -40,7 +42,7 @@ jobs:
         run: poetry install --no-interaction
 
       - name: Lint with Ruff
-        run: poetry run ruff check backend/ sdk/python/
+        run: poetry run ruff check backend/ sdk/python/ tests/
 
       - name: Validate Python syntax
         run: |
@@ -102,7 +104,8 @@ jobs:
           MONGODB_URL: mongodb://localhost:27017
           MONGODB_DB: rudra_test
           REDIS_URL: redis://localhost:6379/0
-          SECRET_KEY: unit-test-only-secret
+          # At least 32 bytes: PyJWT warns on shorter HS256 keys.
+          SECRET_KEY: unit-test-only-secret-never-deploy-this
         run: pytest tests/unit/ -v
 
   integration-tests:
@@ -132,6 +135,8 @@ jobs:
           pip install -r backend/requirements.txt
           pip install pytest pytest-asyncio
 
+      # CI=true (set by GitHub Actions) makes tests/integration/conftest.py
+      # fail instead of skip if the MongoDB service is unreachable.
       - name: Run integration tests
         env:
           KEYCLOAK_ADMIN_USER: test-admin
@@ -139,7 +144,7 @@ jobs:
           MONGODB_URL: mongodb://localhost:27017
           MONGODB_DB: rudra_test
           REDIS_URL: redis://localhost:6379/0
-          SECRET_KEY: integration-test-only-secret
+          SECRET_KEY: integration-test-only-secret-never-deploy
         run: pytest tests/integration/ -v
 
   security:
@@ -230,17 +235,21 @@ jobs:
 
       - name: Validate SDK
         run: |
+          # node:assert throws (and exits non-zero) on failure; console.assert
+          # only logs, so it could never fail this step.
           node --input-type=module -e "
+          import assert from 'node:assert/strict';
           import { RudraClient, RudraAPIError } from './sdk/javascript/src/index.js';
           const client = new RudraClient('http://localhost:8000', { token: 'test' });
-          console.assert(client.token === 'test');
-          console.assert(client.projects !== undefined);
-          console.assert(client.users !== undefined);
-          console.assert(client.organizations !== undefined);
-          console.assert(client.roles !== undefined);
-          console.assert(client.sso !== undefined);
-          console.assert(client.webhooks !== undefined);
-          console.assert(client.coupons !== undefined);
-          console.assert(client.analytics !== undefined);
+          assert.equal(client.token, 'test');
+          assert.ok(client.projects);
+          assert.ok(client.users);
+          assert.ok(client.organizations);
+          assert.ok(client.roles);
+          assert.ok(client.sso);
+          assert.ok(client.webhooks);
+          assert.ok(client.coupons);
+          assert.ok(client.analytics);
+          assert.equal(typeof RudraAPIError, 'function');
           console.log('JavaScript SDK OK - all resources verified');
           "
