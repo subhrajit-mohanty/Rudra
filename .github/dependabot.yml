@@ -1,0 +1,37 @@
+# Weekly dependency updates so the `Dependency Security Audit` CI job
+# does not go red from drift. Minor and patch bumps are grouped into one
+# PR per ecosystem; major bumps arrive as individual PRs.
+#
+# PRs target the default branch because CI only runs on pull requests
+# into master/main. The root pyproject.toml is not listed: it mirrors
+# backend/requirements.txt by hand until FND-10 picks a single source.
+version: 2
+updates:
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+    groups:
+      backend-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "npm"
+    directory: "/frontend"
+    schedule:
+      interval: "weekly"
+    groups:
+      frontend-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns:
+          - "*"
