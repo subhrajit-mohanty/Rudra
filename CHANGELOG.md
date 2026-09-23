@@ -7,6 +7,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- Resolve every finding from the CI `Dependency Security Audit`, which
+  had been failing since May and blocking unrelated pull requests.
+  `pip-audit` and `npm audit` now report no known vulnerabilities.
+- Bump `fastapi` from 0.129.0 to 0.141.1 and pin `starlette` to 1.6.0
+  explicitly, since newer FastAPI releases only declare a lower bound.
+- Replace `python-jose` with `PyJWT` 2.14.0. The backend only signs
+  HS256 tokens, and `python-jose` pulled in `ecdsa`, which has an open
+  advisory with no fixed release. The `pyasn1` pin existed only for
+  `python-jose` and is dropped.
+- Remove `python-multipart`. No route accepts form data or file uploads,
+  so the dependency was unused.
+- Upgrade the dashboard toolchain to `vite` 8 and `@vitejs/plugin-react`
+  6 (both need Node 20.19 or newer) and `react-router-dom` to 7, and
+  refresh `frontend/package-lock.json`.
+
+### Added
+
+- `.github/dependabot.yml` with weekly, grouped updates for the backend
+  (pip), the dashboard (npm) and GitHub Actions.
+
+### Changed
+
+- The release workflow reuses the full CI pipeline through
+  `workflow_call`, so a tag is only published after lint, unit and
+  integration tests, the dependency audit, Docker builds and SDK checks
+  pass. It previously skipped the tests and the audit.
+- `pyproject.toml` pins the same backend versions as
+  `backend/requirements.txt`, plus `ruff` 0.16.8 and current `pytest`,
+  so the Poetry based lint job no longer installs outdated packages.
+- CI lints `tests/` as well as `backend/` and `sdk/python/`, and the test
+  `SECRET_KEY` values are at least 32 bytes to match PyJWT's HS256
+  guidance.
+- The README and published docs separate features that work today from
+  dashboard settings that are saved but not enforced yet, and the SDK
+  install instructions point at PyPI (`pip install rudra`) and at a
+  local checkout for the unpublished JavaScript SDK.
+- `CONTRIBUTING.md` targets pull requests at `master` and documents the
+  lint command.
+
+### Fixed
+
+- Integration tests fail instead of skipping when MongoDB is unreachable
+  in CI (`CI=true`), so a broken service container can no longer produce
+  a green run with zero tests executed. Locally they still skip, after
+  one connection attempt instead of one per test.
+- The JavaScript SDK CI check used `console.assert`, which only logs; it
+  now uses `node:assert`, so a failed check fails the job.
+
+### Removed
+
+- A stray macOS `.DS_Store` file.
+
 ## [1.1.0] - 2026-04-23
 
 ### Security
