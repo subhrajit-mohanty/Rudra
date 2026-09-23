@@ -2,10 +2,10 @@ import hashlib
 import secrets
 from datetime import datetime, timedelta
 
+import jwt
 from config import SECRET_KEY
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
 
 security = HTTPBearer()
 ALGORITHM = "HS256"
@@ -31,7 +31,7 @@ def create_access_token(data: dict) -> str:
 def decode_token(token: str) -> dict:
     try:
         return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except JWTError:
+    except jwt.InvalidTokenError:
         raise HTTPException(status_code=401, detail="Invalid or expired token")
 
 async def get_current_admin(creds: HTTPAuthorizationCredentials = Depends(security)):

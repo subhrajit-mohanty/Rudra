@@ -1,11 +1,11 @@
-fastapi==0.129.0
+fastapi==0.141.1
+# fastapi only declares starlette>=0.46, so pin the patched release
+# explicitly to keep builds reproducible.
+starlette==1.6.0
 uvicorn[standard]==0.32.1
 motor==3.6.0
 pymongo==4.9.2
 httpx==0.28.1
-python-jose[cryptography]==3.5.0
-pyasn1>=0.6.3
-
+PyJWT==2.14.0
 pydantic==2.10.3
-python-multipart==0.0.26
 redis[hiredis]==5.2.1

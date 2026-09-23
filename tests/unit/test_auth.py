@@ -4,13 +4,10 @@ These exercise the pure functions with no network or database. They are
 the first line of defence against regressions in password hashing and
 JWT handling.
 """
-import time
 from datetime import datetime, timedelta
 
+import jwt
 import pytest
-from fastapi import HTTPException
-from jose import jwt
-
 from auth import (
     ALGORITHM,
     create_access_token,
@@ -19,6 +16,7 @@ from auth import (
     verify_password,
 )
 from config import SECRET_KEY
+from fastapi import HTTPException
 
 
 class TestPasswordHashing:
@@ -73,7 +71,7 @@ class TestJwt:
         token = create_access_token({"sub": "alice"})
         header, payload, _ = token.split(".")
         bad_sig = jwt.encode(
-            {"sub": "alice"}, "a different secret entirely", algorithm=ALGORITHM
+            {"sub": "alice"}, "a different secret entirely, also 32+ bytes", algorithm=ALGORITHM
         ).split(".")[2]
         tampered = f"{header}.{payload}.{bad_sig}"
         with pytest.raises(HTTPException) as exc:
@@ -92,7 +90,5 @@ class TestJwt:
 
     def test_token_uses_configured_algorithm(self):
         token = create_access_token({"sub": "bob"})
-        header_b64, _, _ = token.split(".")
-        # jose does not expose header directly; decode unverified to inspect.
-        payload = jwt.get_unverified_header(token)
-        assert payload["alg"] == ALGORITHM
+        header = jwt.get_unverified_header(token)
+        assert header["alg"] == ALGORITHM
